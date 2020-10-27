@@ -1,0 +1,126 @@
+declare
+
+   cursor c1 is
+      select level
+        from   dual
+        connect by level < 11;
+        
+  v_cpu  number;
+  v_mem  number;
+  v_storage number;
+
+begin
+
+
+    for cnt in 1..10 loop
+       for c1rec in c1 loop
+          SELECT round(DBMS_RANDOM.VALUE(10, 20)) into v_cpu FROM DUAL;
+          SELECT round(DBMS_RANDOM.VALUE(1000, 1500)) into v_mem FROM DUAL;
+          SELECT round(DBMS_RANDOM.VALUE(1000, 1100)) into v_storage FROM DUAL;
+             insert into t_logs
+               (name, cpu, mem, storage)
+               values
+               (c1rec.level, v_cpu, v_mem, v_storage);
+       end loop;
+       
+      dbms_lock.sleep(1);
+       dbms_output.put_line(sysdate);
+
+   end loop;
+
+end;
+
+   
+   insert into t_logs
+   (name, cpu, mem, storage)
+   value
+   (1, ), 
+
+SELECT round(DBMS_RANDOM.VALUE(10, 20)) rand FROM DUAL;
+
+
+select level
+from   dual
+connect by level < 10
+
+
+create table tb_racks
+(
+    rack_id   varchar2(100),
+    slot_id   number,
+    label_id   number,
+    dt        date default sysdate
+)
+
+create table tb_label
+(
+    label_id   number,
+    lable_name  varchar2(100),
+    ip         varchar2(20),
+    gbn       varchar2(100),
+        color       varchar2(100),
+    cpu      number,
+    mem      number,
+    storage  number,
+    use_yn   varchar2(1) default 'Y',
+    alerm_yn   varchar2(1) default 'N',    
+    dt        date default sysdate
+)
+
+drop table tb_alert;
+create table  tb_alert
+(
+    label_id  number primary key,
+    cpu       number,
+    mem       number,
+    storage   number,
+    live_yn   varchar2(1),
+    ping_ss   number,
+    msg       varchar2(200),
+    dt        date default sysdate
+)
+
+
+create table  tb_logs
+(
+    label_id  number,
+    cpu       number,
+    mem       number,
+    storage   number,
+    bandwidth  number,
+    dt        date default sysdate
+)
+
+create table  tb_ping
+(
+    label_id  number,
+    live_yn   varchar2(10),
+    elapse_ss number,
+    dt        date default sysdate
+)
+
+  CREATE SEQUENCE  "ADMIN"."PING_SEQ"  MINVALUE 1 MAXVALUE 9999999999999999999999999999 INCREMENT BY 1 START WITH 50 CACHE 20 NOORDER  NOCYCLE  NOKEEP  NOSCALE  GLOBAL ;
+
+
+create or replace TRIGGER  "BI_TB_PING" 
+    before insert on TB_PING
+    for each row
+    begin
+      if :new.SEQ is null then
+          select PING_SEQ.nextval into :new.SEQ from sys.dual;
+      end if;
+      update TB_ALERT
+      set    PING_YN = :new.ping_yn, ping_ms = :new.elapse_ss
+      where   label_id = :new.label_id;
+
+    end;
+
+
+create table  tb_ping
+(
+    seq       number,
+    label_id  number,
+    live_yn   varchar2(10),
+    elapse_ss number,
+    dt        date default sysdate
+)
